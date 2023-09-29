@@ -14,4 +14,9 @@ public class RegisterModel
     [DataType(DataType.Password)]
     [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
     public string ConfirmPassword { get; set; }
+    public string FirstName { get; internal set; }
+    public string LastName { get; internal set; }
+    public DateTime BirthDate { get; internal set; }
+    public string ProfilePictureUrl { get; internal set; }
+    public string Bio { get; internal set; }
 }

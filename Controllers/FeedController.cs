@@ -33,8 +33,8 @@ namespace TwitterCloneAPI.Controllers
 
                 // Get the user's followers
                 var userFollowers = await _context.Followers
-                .Where(f => f.FolloweeId == userId) // Change to FolloweeId
-                .Select(f => f.FollowerId) // Change to FollowerId
+                .Where(f => f.FolloweeId == userId)
+                .Select(f => f.FollowerId)
                 .ToListAsync();
 
                 // Include the user's own tweets and the tweets of their followers

@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
-using TwitterCloneAPI.Models; // Adjust the namespace as needed
-//using TwitterCloneAPI.ViewModels; // You may need to create this ViewModel
+using TwitterCloneAPI.Models;
 
 [ApiController]
 [Route("api/user")]
@@ -25,26 +24,42 @@ public class UserController : ControllerBase
             var user = new ApplicationUser
             {
                 UserName = model.Email,
-                Email = model.Email // You can add additional user properties here
+                Email = model.Email,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                BirthDate = model.BirthDate,
+                ProfilePictureUrl = model.ProfilePictureUrl,
+                Bio = model.Bio
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (result.Succeeded)
             {
-                // You can customize the response on successful registration
-                return Ok(new { Message = "Registration successful" });
+                // Registration succeeded, customize the response here
+                var customResponse = new
+                {
+                    Message = "Registration successful",
+                    UserId = user.Id,
+                    email = user.Email
+                };
+                return Ok(customResponse);
             }
-
-            // Handle registration errors
-            foreach (var error in result.Errors)
+            else
             {
-                ModelState.AddModelError(string.Empty, error.Description);
+                // Registration failed, handle and report errors
+                var errors = result.Errors.Select(error => error.Description);
+
+                var errorResponse = new
+                {
+                    Message = "Registration failed",
+                    Errors = errors
+                };
+
+                return BadRequest(errorResponse);
             }
         }
-
-        // Return validation errors
-        return BadRequest(ModelState);
+            return BadRequest(ModelState);
     }
 
     [HttpPost("login")]
