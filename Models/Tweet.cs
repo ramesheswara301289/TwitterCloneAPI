@@ -15,7 +15,11 @@ namespace TwitterCloneAPI.Models
         public DateTime Timestamp { get; set; }
         public User User { get; set; }
 
-        public string Content { get; set; } // Add this property
+        public string Content { get; set; } 
+        public List<string> LikedByUsers { get; set; }
+        public int LikeCount { get; internal set; }
+
+        public List<Comment> Comments { get; set; } = new List<Comment>();
 
     }
 }

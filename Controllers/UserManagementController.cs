@@ -9,7 +9,7 @@ using TwitterCloneAPI.Models;
 
 [ApiController]
 [Route("api/user-management")]
-[Authorize] // Ensure that only authenticated users can access these endpoints
+[Authorize]
 public class UserManagementController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
@@ -47,7 +47,7 @@ public class UserManagementController : ControllerBase
 
         if (userProfile == null)
         {
-            return NotFound(); // Profile not found
+            return NotFound();
         }
 
         // Update profile properties

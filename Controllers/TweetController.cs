@@ -3,9 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using TwitterCloneAPI.Data;
-using TwitterCloneAPI.Exceptions; // Add the appropriate namespace for your custom exception
+using TwitterCloneAPI.Exceptions;
 using TwitterCloneAPI.Models;
 
 [ApiController]
@@ -63,16 +64,36 @@ public class TweetController : ControllerBase
             return NotFound();
         }
 
-        // Implement your like logic here
-        // Update tweet's like count, user's liked-tweets list, etc.
+        // Check if the user has already liked the tweet
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value; // Get the user's ID
+
+        if (tweet.LikedByUsers == null)
+        {
+            tweet.LikedByUsers = new List<string>(); // Initialize the collection if it's null
+        }
+
+        if (tweet.LikedByUsers.Contains(userId))
+        {
+            // User has already liked the tweet, so remove the like
+            tweet.LikeCount--;
+            tweet.LikedByUsers.Remove(userId);
+        }
+        else
+        {
+            // User has not liked the tweet, so add the like
+            tweet.LikeCount++;
+            tweet.LikedByUsers.Add(userId);
+        }
+
         // Save changes to the database
+        await _context.SaveChangesAsync();
 
         return Ok(new { Message = "Tweet liked successfully" });
     }
 
     // Endpoint for commenting on a tweet
     [HttpPost("{id}/comment")]
-    public async Task<IActionResult> CommentOnTweet(int id, string comment)
+    public async Task<IActionResult> CommentOnTweet(int id, [FromBody] string commentText)
     {
         var tweet = await _context.Tweets.FindAsync(id);
 
@@ -81,27 +102,52 @@ public class TweetController : ControllerBase
             return NotFound();
         }
 
-        // Implement your comment logic here
-        // Add the comment to the tweet's comments list, update timestamps, etc.
-        // Save changes to the database
+        if (string.IsNullOrWhiteSpace(commentText))
+        {
+            return BadRequest("Comment text cannot be empty.");
+        }
+
+        var comment = new Comment
+        {
+            Text = commentText,
+            Timestamp = DateTime.Now,
+            UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        };
+
+        tweet.Comments.Add(comment);
+        tweet.Timestamp = DateTime.Now;
+
+        await _context.SaveChangesAsync();
 
         return Ok(new { Message = "Comment added successfully" });
     }
+
+
 
     // Endpoint for sharing (retweeting) a tweet
     [HttpPost("{id}/share")]
     public async Task<IActionResult> ShareTweet(int id)
     {
-        var tweet = await _context.Tweets.FindAsync(id);
+        var tweetToShare = await _context.Tweets.FindAsync(id);
 
-        if (tweet == null)
+        if (tweetToShare == null)
         {
             return NotFound();
         }
 
-        // Implement your share (retweet) logic here
-        // Create a new tweet based on the original tweet, update timestamps, user, etc.
+        // Create a new tweet based on the original tweet
+        var retweet = new Tweet
+        {
+            Content = tweetToShare.Content, // You may modify this if you want to add a prefix like "Retweet: "
+            Timestamp = DateTime.Now,
+            UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        };
+
+        // Add the new retweet to the context
+        _context.Tweets.Add(retweet);
+
         // Save changes to the database
+        await _context.SaveChangesAsync();
 
         return Ok(new { Message = "Tweet shared successfully" });
     }
